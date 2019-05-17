@@ -1,3 +1,7 @@
+if exists(select 1 from sys.databases where name = 'rubanko')
+	drop database rubanko;
+go
+
 create database rubanko;
 go
 
@@ -38,6 +42,10 @@ create index TFact_M1 on TFact (Year, Month);
 
 create table THash (Year int, Month int, primary key (Year, Month), HashCode varchar(400));
 
+update TFact
+set SomeTextData = REPLICATE(SomeTextData, 1000)
+where TFactId in (1, 3333, 55555);
+
 go
 
 
@@ -59,6 +67,14 @@ as begin
 	open @c
 	fetch next from @c into @data
 	while @@FETCH_STATUS = 0 begin
+	
+		if LEN(@hash+@data) > 8000
+			while len(@hash+@data) > 8000
+			begin
+				set @hash = HASHBYTES('sha1', @hash + substring(@data, 1, 7500))
+				set @data = SUBSTRING(@data, 7501, len(@data)-7500)
+			end
+	
 		set @hash = HASHBYTES('sha1', @hash + @data)
 	
 		fetch next from @c into @data
